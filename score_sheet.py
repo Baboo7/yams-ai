@@ -162,14 +162,9 @@ class ScoreSheet():
         return item_ids
 
     def get_crossable_items(self) -> list[str]:
-        crossable_items = []
-        for item in self.sheet:
-            if (item["score"] == None):
-                crossable_items.append(item["id"])
-        return crossable_items
-
-    def can_cross_out_item(self) -> bool:
-        return len(self.get_crossable_items()) > 0
+        crossable_items_id = [it["id"]
+                              for it in self.sheet if it["score"] == None]
+        return crossable_items_id
 
     def find_score_item(self, id: str):
         i = 0

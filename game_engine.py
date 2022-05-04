@@ -12,6 +12,17 @@ def action_to_score_item_id(action: str) -> str:
     return action.replace("SCORE_", "").lower().replace("_", "-")
 
 
+CROSS_OUT_PREFIX = "CROSS_OUT_"
+
+
+def cross_out_item_id_to_action(cross_out_item_id: str) -> str:
+    return CROSS_OUT_PREFIX + cross_out_item_id.upper().replace("-", "_")
+
+
+def action_to_cross_out_item_id(action: str) -> str:
+    return action.replace(CROSS_OUT_PREFIX, "").lower().replace("_", "-")
+
+
 def roll_dices(nb: int):
     dices = []
     for i in range(0, nb):
@@ -58,13 +69,8 @@ class GameEngine():
             self.dices = dices_picked
         elif action.startswith("SCORE_"):
             self.score(action_to_score_item_id(action))
-        elif action == "CROSS_OUT_ITEM":
-            items_crossable = self.score_sheet.get_crossable_items()
-            item_to_cross_out = self.player.pick_item_to_cross_out(
-                items_crossable)
-            print("crossing item ", item_to_cross_out)
-            self.score_sheet.cross_out_item(item_to_cross_out)
-            self.end_turn()
+        elif action.startswith(CROSS_OUT_PREFIX):
+            self.cross_out(action_to_cross_out_item_id(action))
 
         self.last_action = action
 
@@ -95,6 +101,11 @@ class GameEngine():
         self.score_sheet.set_score(item_id, self.dices)
         score = self.score_sheet.get_score(item_id, self.dices)
         print("scoring ", item_id, " (", score, " pts)")
+        self.end_turn()
+
+    def cross_out(self, item_id):
+        print("crossing out ", item_id)
+        self.score_sheet.cross_out_item(item_id)
         self.end_turn()
 
     def pick_action(self):

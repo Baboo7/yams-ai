@@ -9,6 +9,3 @@ class PlayerDumb():
     def pick_dices(self, dices):
         pick_count = rand_int(1, DICES_COUNT)
         return dices[0:pick_count - 1]
-
-    def pick_item_to_cross_out(self, items: list[str]) -> str:
-        return pick_rand(items)
