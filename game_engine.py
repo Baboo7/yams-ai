@@ -41,8 +41,10 @@ class GameEngine():
 
     def start_game(self):
         self.running = True
+        turn = 1
         while self.running:
-            self.run_game()
+            self.run_game(turn)
+            turn += 1
         self.end_game()
 
     def end_game(self):
@@ -50,8 +52,12 @@ class GameEngine():
         print("score: ", self.score_sheet.compute_score())
         print(self.score_sheet)
 
-    def run_game(self):
-        action: str = self.pick_action()
+    def run_game(self, turn):
+        print(f"------ TURN {turn} ------")
+        print("dices: ", self.dices)
+        actions = self.list_actions()
+        print(f"available actions: {actions}")
+
         print("selected action: ", action)
 
         if action == None:
@@ -73,6 +79,8 @@ class GameEngine():
             self.cross_out(action_to_cross_out_item_id(action))
 
         self.last_action = action
+
+        print("")
 
     def list_actions(self):
         if len(self.dices) < DICES_COUNT:
