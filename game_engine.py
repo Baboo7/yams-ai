@@ -83,21 +83,24 @@ class GameEngine():
         print("")
 
     def list_actions(self):
+        actions = []
+        for id in self.score_sheet.get_scorable_items(self.dices):
+            actions.append(score_item_id_to_action(id))
+
+        for id in self.score_sheet.get_crossable_items():
+            actions.append(cross_out_item_id_to_action(id))
+
+        if len(actions) == 0:
+            return []
+
         if len(self.dices) < DICES_COUNT:
             return ["THROW_DICES"]
 
-        actions = []
         if self.throws < THROW_COUNT_MAX and len(self.dices) < DICES_COUNT:
             actions.append('THROW_DICES')
 
         if self.throws < THROW_COUNT_MAX and len(self.dices) == DICES_COUNT and self.last_action != "PICK_DICES":
             actions.append('PICK_DICES')
-
-        for id in self.score_sheet.get_scorable_items(self.dices):
-            actions.append(score_item_id_to_action(id))
-
-        if self.score_sheet.can_cross_out_item():
-            actions.append('CROSS_OUT_ITEM')
 
         return actions
 
