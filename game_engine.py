@@ -36,6 +36,7 @@ class GameEngine():
         self.score_sheet = ScoreSheet()
         self.throws = 0
         self.dices = []
+        self.dices_picked = []
         self.player = player
         self.last_action = ""
 
@@ -54,7 +55,8 @@ class GameEngine():
 
     def run_game(self, turn):
         print(f"------ TURN {turn} ------")
-        print("dices: ", self.dices)
+        print(
+            f"dices: {self.dices} / picked: {self.dices_picked} / throw: {self.throws}")
         actions = self.list_actions()
         print(f"available actions: {actions}")
 
@@ -63,17 +65,22 @@ class GameEngine():
 
         if action == None:
             self.running = False
-        elif action == "THROW_DICES":
-            dice_count = DICES_COUNT if len(
-                self.dices) == DICES_COUNT else DICES_COUNT - len(self.dices)
-            dices_rolled = roll_dices(dice_count)
-            self.dices = concat(self.dices, dices_rolled)
-            print("dices: ", self.dices)
+        elif action == "THROW_DICES_ALL":
+            self.dices = roll_dices(DICES_COUNT)
+            self.dices_picked = []
+            print(f"dices: {self.dices}")
             self.throws += 1
-        elif action == "PICK_DICES":
-            dices_picked = self.player.pick_dices(self.dices)
-            print("dices picked: ", dices_picked)
-            self.dices = dices_picked
+        elif action == "THROW_DICES_REMAINING":
+            dices_rolled = roll_dices(len(self.dices))
+            self.dices = concat(self.dices_picked, dices_rolled)
+            self.dices_picked = []
+            print(f"dices: {self.dices}")
+            self.throws += 1
+        elif action.startswith("PICK_VALUE_"):
+            value = int(action.replace("PICK_VALUE_", ""))
+            print(f"value picked: {value}")
+            self.dices_picked.append(value)
+            self.dices.remove(value)
         elif action.startswith("SCORE_"):
             self.score(action_to_score_item_id(action))
         elif action.startswith(CROSS_OUT_PREFIX):
@@ -85,28 +92,29 @@ class GameEngine():
 
     def list_actions(self):
         actions = []
-        for id in self.score_sheet.get_scorable_items(self.dices):
-            actions.append(score_item_id_to_action(id))
 
-        for id in self.score_sheet.get_crossable_items():
-            actions.append(cross_out_item_id_to_action(id))
+        if self.throws < THROW_COUNT_MAX:
+            for value in self.get_pickable_values():
+                actions.append(f"PICK_VALUE_{value}")
 
-        if len(actions) == 0:
-            return []
+        if len(self.dices) == DICES_COUNT:
+            for id in self.score_sheet.get_scorable_items(self.dices):
+                actions.append(score_item_id_to_action(id))
 
-        if len(self.dices) < DICES_COUNT:
-            return ["THROW_DICES"]
+            for id in self.score_sheet.get_crossable_items():
+                actions.append(cross_out_item_id_to_action(id))
 
-        if self.throws < THROW_COUNT_MAX and len(self.dices) < DICES_COUNT:
-            actions.append('THROW_DICES')
+        if 0 < len(self.dices) and len(self.dices) < DICES_COUNT and self.throws < THROW_COUNT_MAX:
+            actions.append('THROW_DICES_REMAINING')
 
-        if self.throws < THROW_COUNT_MAX and len(self.dices) == DICES_COUNT and self.last_action != "PICK_DICES":
-            actions.append('PICK_DICES')
+        if self.throws < THROW_COUNT_MAX:
+            actions.append("THROW_DICES_ALL")
 
         return actions
 
     def end_turn(self):
         self.dices = []
+        self.dices_picked = []
         self.throws = 0
 
     def score(self, item_id):
@@ -124,4 +132,21 @@ class GameEngine():
         if len(actions) == 0:
             return None
 
-        return self.player.pick_action(actions)
+        prompt = True
+        while prompt:
+            try:
+                action = self.player.pick_action(self.dices, actions)
+
+                if action.lower() == "q" or action.lower() == "quit":
+                    self.running = False
+                else:
+                    actions.index(action)
+                prompt = False
+            except:
+                print(f"action {action} is invalid")
+                pass
+
+        return action
+
+    def get_pickable_values(self) -> list[int]:
+        return list(set(self.dices))
