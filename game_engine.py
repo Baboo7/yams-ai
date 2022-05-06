@@ -58,6 +58,7 @@ class GameEngine():
         actions = self.list_actions()
         print(f"available actions: {actions}")
 
+        action: str = self.pick_action(actions)
         print("selected action: ", action)
 
         if action == None:
@@ -119,9 +120,7 @@ class GameEngine():
         self.score_sheet.cross_out_item(item_id)
         self.end_turn()
 
-    def pick_action(self):
-        actions = self.list_actions()
-
+    def pick_action(self, actions):
         if len(actions) == 0:
             return None
 
